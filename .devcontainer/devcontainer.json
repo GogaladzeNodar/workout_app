@@ -1,0 +1,43 @@
+{
+    "name": "Django Dev Container",
+    "dockerComposeFile": [
+        "../docker-compose.yml"
+    ],
+    "service": "django",
+    "workspaceFolder": "/app",
+    "postCreateCommand": "pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-azuretools.vscode-docker",
+                "ms-python.black-formatter", // Black
+                "ms-python.isort", // isort
+                "ms-python.flake8" // Flake8
+            ],
+            "settings": {
+                "python.formatting.provider": "black",
+                "python.formatting.blackArgs": [
+                    "--line-length",
+                    "88"
+                ],
+                "python.linting.flake8Enabled": true,
+                "python.linting.enabled": true,
+                "python.sortImports.args": [
+                    "--profile",
+                    "black"
+                ]
+            }
+        }
+    },
+    "forwardPorts": [
+        8000,
+        5432
+    ],
+    "remoteUser": "root",
+    "mounts": [
+        "source=${localWorkspaceFolder}/staticfiles,target=/app/staticfiles,type=bind",
+        "source=${localWorkspaceFolder}/media,target=/app/media,type=bind"
+    ]
+}
