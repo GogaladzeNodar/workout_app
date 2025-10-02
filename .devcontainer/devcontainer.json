@@ -12,9 +12,7 @@
                 "ms-python.python",
                 "ms-python.vscode-pylance",
                 "ms-azuretools.vscode-docker",
-                "ms-python.black-formatter", // Black
-                "ms-python.isort", // isort
-                "ms-python.flake8" // Flake8
+                "ms-python.black-formatter" // Black
             ],
             "settings": {
                 "python.formatting.provider": "black",
@@ -22,8 +20,6 @@
                     "--line-length",
                     "88"
                 ],
-                "python.linting.flake8Enabled": true,
-                "python.linting.enabled": true,
                 "python.sortImports.args": [
                     "--profile",
                     "black"
