@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 
 class BaseAPIView(APIView):
@@ -23,3 +24,21 @@ class BaseAPIView(APIView):
         request.input = logged_data
 
         return super().initial(request, *args, **kwargs)
+
+
+class BaseViewSet(GenericViewSet, BaseAPIView):
+    """
+    this is base class for all ViewSets.
+    automatically captures input and stores in self.input
+    """
+
+    pass
+
+
+class BaseTokenObtainPairView(TokenObtainPairView, BaseAPIView):
+    """
+    this is base class for all TokenObtainPairViews.
+    automatically captures input and stores in self.input
+    """
+
+    pass
