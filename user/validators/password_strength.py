@@ -2,6 +2,7 @@ import re
 from django.core.exceptions import ValidationError
 import math
 from typing import Optional, Dict
+from pathlib import Path
 
 
 SEQUENCE_PATTERNS = [
@@ -46,7 +47,7 @@ class PasswordStrengthValidator:
         self.required_digit = required_digit
         self.required_special = required_special
         self.maximum_repetition = maximum_repetition
-        self.blacklist = blacklist
+        self.blacklist = blacklist or self.load_blacklist()
 
     def char_class(self, password: str) -> Dict[str, int]:
         """
@@ -59,6 +60,23 @@ class PasswordStrengthValidator:
             "special": len(re.findall(r"[^A-Za-z0-9]", password)),
         }
         return counts
+
+    def load_blacklist(self) -> set:
+        """
+        This method loads a blacklist of common passwords from a file. (cached after first load)
+        """
+        if hasattr(self, "blacklist_cache"):
+            return self.blacklist_cache
+
+        file_path = Path(__file__).resolve().parent / "common_passwords.txt"
+        if not file_path.exists():
+            self.blacklist_cache = set()
+            return self.blacklist_cache
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            passwords = {line.strip() for line in f if line.strip()}
+        self.blacklist_cache = passwords
+        return self.blacklist_cache
 
     def shannon_entropy(self, password: str) -> float:
         """
@@ -75,7 +93,7 @@ class PasswordStrengthValidator:
         for count in freq.values():
             p = count / length
             entropy -= p * math.log2(p)
-        return entropy 
+        return entropy
 
     def has_sequence(self, password: str, seq_length: int = 4) -> bool:
         """
@@ -109,17 +127,20 @@ class PasswordStrengthValidator:
                 run = 1
         return max_run > self.maximum_repetition
 
-
     def check(self, password: str) -> list[str]:
         """
-            Validate the password against all criteria and return a list of error messages (if any).
+        Validate the password against all criteria and return a list of error messages (if any).
         """
         errors = []
 
         if len(password) < self.min_length or len(password) > self.max_length:
-            errors.append(f"password length must be in range {self.min_length} - {self.max_length}")
+            errors.append(
+                f"password length must be in range {self.min_length} - {self.max_length}"
+            )
 
-        
+        if password.lower() in self.blacklist:
+            errors.append("This password is too common.")
+
         counts = self.char_class(password)
         if self.required_upper and counts["upper"] == 0:
             errors.append(f"Password must have at last 1 upper letter")
@@ -134,7 +155,7 @@ class PasswordStrengthValidator:
             errors.append(f"This password have sequence.")
 
         if self.has_consecutive_repeat(password):
-            errors.append(f"Password have consecutive_repeat") 
+            errors.append(f"Password have consecutive_repeat")
 
         entropy = self.shannon_entropy(password)
         if entropy < 3.5:
@@ -142,17 +163,7 @@ class PasswordStrengthValidator:
 
         return errors
 
-    
     def validate(self, password: str) -> None:
         errors = self.check(password)
         if errors:
             raise ValidationError(errors)
-
-
-
-
-
-        
-
-
-
