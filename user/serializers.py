@@ -1,5 +1,8 @@
 from rest_framework import serializers
 from .models import User
+from .validators.password_strength import PasswordStrengthValidator
+
+password_validator = PasswordStrengthValidator()
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -18,6 +21,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             "height_cm",
             "gender",
         ]
+
+    def validate_password(self, value):
+        try:
+            password_validator.validate(value)
+        except serializers.ValidationError as e:
+            raise serializers.ValidationError(e.messages)
+        return value
 
     def validate(self, data):
         if data["password"] != data["password2"]:
@@ -69,6 +79,13 @@ class ChangePasswordSerializer(serializers.Serializer):
         user = self.context["request"].user
         if not user.check_password(value):
             raise serializers.ValidationError("Old password is not correct")
+        return value
+
+    def validate_new_password(self, value):
+        try:
+            password_validator.validate(value)
+        except serializers.ValidationError as e:
+            raise serializers.ValidationError(e.messages)
         return value
 
     def save(self, **kwargs):
